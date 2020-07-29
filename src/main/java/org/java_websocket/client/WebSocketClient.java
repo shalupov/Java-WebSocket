@@ -89,6 +89,12 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
 	private SocketFactory socketFactory = null;
 
 	/**
+	 * The SSLSocketFactory for this WebSocketClient
+	 * @since 1.5.2
+	 */
+	private SSLSocketFactory sslSocketFactory = null;
+
+	/**
 	 * The used OutputStream
 	 */
 	private OutputStream ostream;
@@ -464,9 +470,12 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
 
 			// if the socket is set by others we don't apply any TLS wrapper
 			if (isNewSocket && "wss".equals( uri.getScheme())) {
-				SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-				sslContext.init(null, null, null);
-				SSLSocketFactory factory = sslContext.getSocketFactory();
+				SSLSocketFactory factory = sslSocketFactory;
+				if (factory == null) {
+					SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+					sslContext.init(null, null, null);
+					factory = sslContext.getSocketFactory();
+				}
 				socket = factory.createSocket(socket, uri.getHost(), getPort(), true);
 			}
 
@@ -825,6 +834,16 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
 	 */
 	public void setSocketFactory(SocketFactory socketFactory) {
 		this.socketFactory = socketFactory;
+	}
+
+	/**
+	 * Accepts a SslSocketFactory.<br>
+	 * This method must be called before <code>connect</code>.
+	 * This factory will be called for creating SSL sockets over ordinary ones.
+	 * @param sslSocketFactory SSL socket factory which should be used for the connection.
+	 */
+	public void setSslSocketFactory(SSLSocketFactory sslSocketFactory) {
+		this.sslSocketFactory = sslSocketFactory;
 	}
 
 	@Override
